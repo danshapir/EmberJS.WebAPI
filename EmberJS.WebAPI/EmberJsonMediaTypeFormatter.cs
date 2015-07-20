@@ -24,8 +24,17 @@ namespace EmberJS.WebAPI
         }
         public override System.Threading.Tasks.Task WriteToStreamAsync(System.Type type, object value, System.IO.Stream writeStream, System.Net.Http.HttpContent content, System.Net.TransportContext transportContext)
         {
-            var root = GetRootFieldName(type, value);
             var obj = new ExpandoObject() as IDictionary<string, Object>;
+            if (type.IsSubclassOf(typeof(BaseMetaResponseModel)) && type.IsGenericType)
+            {
+                Type innerType = type.GetGenericArguments()[0];
+                var genericValue = (value as BaseMetaResponseModel);
+                value = genericValue.Content;
+                type = innerType;
+                obj["meta"] = genericValue.Meta;
+
+            }
+            var root = GetRootFieldName(type, value);
             obj[root] = value;
             return base.WriteToStreamAsync(type, obj as object, writeStream, content, transportContext);
         }
